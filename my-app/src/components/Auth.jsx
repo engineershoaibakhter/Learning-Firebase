@@ -1,28 +1,95 @@
-import React,{useState} from 'react'
-import {app} from '../FirebaseConfig'
+import React, { useState } from 'react';
+import { app, auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, provider } from '../FirebaseConfig';
 
 function Auth() {
-    const [data,setData]=useState({});
+    const [registerData, setRegisterData] = useState({ email: '', password: '' });
+    const [loginData, setLoginData] = useState({ email: '', password: '' });
 
-    const handleInput=(event)=>{
-        let newInput={[event.target.name]:event.target.value};
+    const handleRegisterInput = (event) => {
+        const { name, value } = event.target;
+        setRegisterData({ ...registerData, [name]: value });
+    };
 
-        setData({...data,...newInput})
-    }
-    const handleSubmit=()=>{
+    const handleLoginInput = (event) => {
+        const { name, value } = event.target;
+        setLoginData({ ...loginData, [name]: value });
+    };
 
-    }
-  return (
-    <>
-    <div>
-        <input type="email" placeholder='Email' name='email' onChange={(event)=>handleInput(event)} />
-        <input type="email" placeholder='Password' name='password' onChange={(event)=>handleInput(event)} />
-    </div>
-    <div>
-        <button onClick={handleSubmit}>Submit</button>
-    </div>
-    </>
-  )
+    const handleRegisterSubmit = () => {
+        if (!registerData.email || !registerData.password) {
+            alert("Please fill out both fields.");
+            return;
+        }
+        createUserWithEmailAndPassword(auth, registerData.email, registerData.password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user);
+            })
+            .catch((error) => {
+                const errorMessage = error.message;
+                alert(errorMessage);
+            });
+    };
+
+    const handleLoginSubmit = () => {
+        if (!loginData.email || !loginData.password) {
+            alert("Please fill out both fields.");
+            return;
+        }
+        signInWithEmailAndPassword(auth, loginData.email, loginData.password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                console.log(user.email);
+            })
+            .catch((error) => {
+                const errorMessage = error.message;
+                alert(errorMessage);
+            });
+    };
+
+    const handleWithGoogle = () => {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
+                const user = result.user;
+                alert(`Logged in as: ${user.displayName}`);
+            })
+            .catch((error) => {
+                const errorMessage = error.message;
+                alert(errorMessage);
+            });
+    };
+
+    return (
+        <>
+            <h1>Register</h1>
+            <div>
+                <input type="email" placeholder="Email" name="email" onChange={handleRegisterInput} />
+                <input type="password" placeholder="Password" name="password" onChange={handleRegisterInput} />
+            </div>
+            <div>
+                <button onClick={handleRegisterSubmit}>Register</button>
+            </div>
+
+            <br />
+            <br />
+
+            <h1>Login</h1>
+            <div>
+                <input type="email" placeholder="Email" name="email" onChange={handleLoginInput} />
+                <input type="password" placeholder="Password" name="password" onChange={handleLoginInput} />
+            </div>
+            <div>
+                <button onClick={handleLoginSubmit}>Login</button>
+            </div>
+
+            <br />
+            <br />
+
+            <button onClick={handleWithGoogle}>Login with Google</button>
+        </>
+    );
 }
 
-export default Auth
+export default Auth;
